@@ -1,17 +1,11 @@
 # system libs
 import argparse
-import multiprocessing as mp
-import tkinter as tk
 
 # 3rd party libs
 import numpy as np
 
 # Local libs
 from Player import AIPlayer, RandomPlayer, HumanPlayer
-
-#https://stackoverflow.com/a/37737985
-def turn_worker(board, send_end, p_func):
-    send_end.send(p_func(board))
 
 
 class Game:
@@ -20,27 +14,17 @@ class Game:
         self.colors = ['yellow', 'red']
         self.current_turn = 0
         self.board = np.zeros([6,7]).astype(np.uint8)
-        self.gui_board = []
         self.game_over = False
         self.ai_turn_limit = time
+        self.winner = None
 
-        #https://stackoverflow.com/a/38159672
-        root = tk.Tk()
-        root.title('Connect 4')
-        self.player_string = tk.Label(root, text=player1.player_string)
-        self.player_string.pack()
-        self.c = tk.Canvas(root, width=700, height=600)
-        self.c.pack()
-
-        for row in range(0, 700, 100):
-            column = []
-            for col in range(0, 700, 100):
-                column.append(self.c.create_oval(row, col, row+100, col+100, fill=''))
-            self.gui_board.append(column)
-
-        tk.Button(root, text='Next Move', command=self.make_move).pack()
-
-        root.mainloop()
+    def serialize(self):
+        return {
+            "board": self.board.tolist(),
+            "turn": self.current_turn,
+            "winner": self.winner,
+            "game_over": self.game_over
+        }
 
     def make_move(self):
         if not self.game_over:
@@ -49,24 +33,10 @@ class Game:
             if current_player.type == 'ai':
                 
                 if self.players[int(not self.current_turn)].type == 'random':
-                    p_func = current_player.get_expectimax_move
+                    move = current_player.get_expectimax_move
                 else:
-                    p_func = current_player.get_alpha_beta_move
+                    move = current_player.get_alpha_beta_move
                 
-                try:
-                    recv_end, send_end = mp.Pipe(False)
-                    p = mp.Process(target=turn_worker, args=(self.board, send_end, p_func))
-                    p.start()
-                    if p.join(self.ai_turn_limit) is None and p.is_alive():
-                        p.terminate()
-                        raise Exception('Player Exceeded time limit')
-                except Exception as e:
-                    uh_oh = 'Uh oh.... something is wrong with Player {}'
-                    print(uh_oh.format(current_player.player_number))
-                    print(e)
-                    raise Exception('Game Over')
-
-                move = recv_end.recv()
             else:
                 move = current_player.get_move(self.board)
 
@@ -75,14 +45,27 @@ class Game:
 
             if self.game_completed(current_player.player_number):
                 self.game_over = True
-                self.player_string.configure(text=self.players[self.current_turn].player_string + ' wins!')
+                #current player wins
+                self.winner=self.current_turn
             elif not any(0 in self.board[:, col] for col in range(self.board.shape[1])):
-                # Board is completely full with no winner — it's a draw
+                # Board is completely full with no winner, it's a draw
                 self.game_over = True
-                self.player_string.configure(text="It's a Draw!")
             else:
                 self.current_turn = int(not self.current_turn)
-                self.player_string.configure(text=self.players[self.current_turn].player_string)
+                #next turn
+            
+    def get_move(self, col):
+
+        if(self.update_board(col, self.current_turn)):
+
+            if(self.game_completed(self.current_turn)):
+                self.winner= self.current_turn
+                self.game_over= True
+            elif not any(0 in self.board[:, col] for col in range(self.board.shape[1])):
+                # Board is completely full with no winner, it's a draw
+                self.game_over = True
+            else:
+                self.current_turn= int(not self.current_turn)
 
     def update_board(self, move, player_num):
         if 0 in self.board[:,move]:
@@ -96,12 +79,11 @@ class Game:
 
                 if update_row >= 0:
                     self.board[update_row, move] = player_num
-                    self.c.itemconfig(self.gui_board[move][update_row],
-                                      fill=self.colors[self.current_turn])
                     break
+            
+            return True
         else:
-            err = 'Invalid move by player {}. Column {}'.format(player_num, move)
-            raise Exception(err)
+            return False
 
 
     def game_completed(self, player_num):

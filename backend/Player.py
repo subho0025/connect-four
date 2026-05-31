@@ -124,8 +124,6 @@ class AIPlayer:
         The 0 based index of the column that represents the next move
         """
 
-        #raise NotImplementedError('Whoops I don\'t know what to do')
-
         depth = 5
 
         valid_cols = self.get_valid_moves(board)
@@ -217,8 +215,7 @@ class AIPlayer:
         RETURNS:
         The 0 based index of the column that represents the next move
         """
-        #raise NotImplementedError('Whoops I don\'t know what to do')
-
+        
         depth = 4
 
         valid_cols = self.get_valid_moves(board)
