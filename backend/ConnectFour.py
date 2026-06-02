@@ -1,71 +1,57 @@
-# system libs
-import argparse
-
-# 3rd party libs
 import numpy as np
-
-# Local libs
 from Player import AIPlayer, RandomPlayer, HumanPlayer
 
 
 class Game:
-    def __init__(self, player1, player2, time):
-        self.players = [player1, player2]
+    def __init__(self, player1, player2, id):
+        self.id = id
+        self.player1 = player1
+        self.player2 = player2
         self.colors = ['yellow', 'red']
-        self.current_turn = 0
+        self.current_turn = 1
         self.board = np.zeros([6,7]).astype(np.uint8)
         self.game_over = False
-        self.ai_turn_limit = time
         self.winner = None
+
+        self.ai_players={}
+
+        if(self.player1=="ai"):
+            self.ai_players[1]= AIPlayer(1)
+        if(self.player2=="ai"):
+            self.ai_players[2]= AIPlayer(2)
 
     def serialize(self):
         return {
             "board": self.board.tolist(),
             "turn": self.current_turn,
             "winner": self.winner,
+            "current_turn": self.current_turn,
             "game_over": self.game_over
         }
-
-    def make_move(self):
-        if not self.game_over:
-            current_player = self.players[self.current_turn]
-
-            if current_player.type == 'ai':
-                
-                if self.players[int(not self.current_turn)].type == 'random':
-                    move = current_player.get_expectimax_move
-                else:
-                    move = current_player.get_alpha_beta_move
-                
-            else:
-                move = current_player.get_move(self.board)
-
-            if move is not None:
-                self.update_board(int(move), current_player.player_number)
-
-            if self.game_completed(current_player.player_number):
-                self.game_over = True
-                #current player wins
-                self.winner=self.current_turn
-            elif not any(0 in self.board[:, col] for col in range(self.board.shape[1])):
-                # Board is completely full with no winner, it's a draw
-                self.game_over = True
-            else:
-                self.current_turn = int(not self.current_turn)
-                #next turn
             
-    def get_move(self, col):
+    def apply_move(self, col):
 
-        if(self.update_board(col, self.current_turn)):
+        if not self.game_over:
 
-            if(self.game_completed(self.current_turn)):
-                self.winner= self.current_turn
-                self.game_over= True
-            elif not any(0 in self.board[:, col] for col in range(self.board.shape[1])):
-                # Board is completely full with no winner, it's a draw
-                self.game_over = True
+            if col<0 or col>6:
+                return False
+
+            if(self.update_board(col, self.current_turn)):
+
+                if(self.game_completed(self.current_turn)):
+                    self.winner= self.current_turn
+                    self.game_over= True
+                elif not any(0 in self.board[:, col] for col in range(self.board.shape[1])):
+                    # Board is completely full with no winner, it's a draw
+                    self.game_over = True
+                else:
+                    self.current_turn= 3-self.current_turn
+                
+                return True
             else:
-                self.current_turn= int(not self.current_turn)
+                return False
+        else:
+            return False
 
     def update_board(self, move, player_num):
         if 0 in self.board[:,move]:
@@ -120,53 +106,10 @@ class Game:
         return (check_horizontal(board) or
                 check_verticle(board) or
                 check_diagonal(board))
+    
+    def restart(self):
+        self.board.fill(0)
+        self.current_turn=1
+        self.game_over=False
+        self.winner=None
 
-
-
-def main(player1, player2, time):
-    """
-    Creates player objects based on the string paramters that are passed
-    to it and calls play_game()
-
-    INPUTS:
-    player1 - a string ['ai', 'random', 'human']
-    player2 - a string ['ai', 'random', 'human']
-    """
-    def make_player(name, num):
-        if name=='ai':
-            return AIPlayer(num)
-        elif name=='random':
-            return RandomPlayer(num)
-        elif name=='human':
-            return HumanPlayer(num)
-
-    Game(make_player(player1, 1), make_player(player2, 2), time)
-
-
-def play_game(player1, player2):
-    """
-    Creates a new game GUI and plays a game using the two players passed in.
-
-    INPUTS:
-    - player1 an object of type AIPlayer, RandomPlayer, or HumanPlayer
-    - player2 an object of type AIPlayer, RandomPlayer, or HumanPlayer
-
-    RETURNS:
-    None
-    """
-    board = np.zeros([6,7])
-
-
-
-if __name__=='__main__':
-    player_types = ['ai', 'random', 'human']
-    parser = argparse.ArgumentParser()
-    parser.add_argument('player1', choices=player_types)
-    parser.add_argument('player2', choices=player_types)
-    parser.add_argument('--time',
-                        type=int,
-                        default=60,
-                        help='Time to wait for a move in seconds (int)')
-    args = parser.parse_args()
-
-    main(args.player1, args.player2, args.time)
