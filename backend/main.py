@@ -54,6 +54,9 @@ def move(id:str, column: int):
     if id not in games:
         raise HTTPException(status_code=404, detail="Invalid game")
     
+    if games[id].current_turn in games[id].ai_players:
+        raise HTTPException(status_code=400, detail="Press Next AI Move")
+    
     if not games[id].apply_move(column):
         raise HTTPException(status_code=400, detail= "Invalid move")
     
@@ -126,18 +129,8 @@ async def find_match(websocket: WebSocket):
             games[id] = Game("human", "human", id)
 
             player1["future"].set_result({
-                "id": id,
-                "player": 1,
-                "state": games[id].serialize()
+                "id": id
             })
-
-            message={
-                "type": "match found",
-                "id": id,
-                "player": 2,
-                "state": games[id].serialize()
-            }
-            await websocket.send_json(message)
 
     if wait:
         try:
@@ -150,6 +143,18 @@ async def find_match(websocket: WebSocket):
         except WebSocketDisconnect:
             async with manager.lock:
                 manager.waiting = deque(i for i in manager.waiting if i["websocket"]!=websocket)
+    else:
+        message={
+            "type": "match found",
+            "id": id
+        }
+        await websocket.send_json(message)
+
+        try:
+            while True:
+                await websocket.receive_text()
+        except WebSocketDisconnect:
+            pass
 
     return
 
@@ -169,9 +174,6 @@ async def ws_endpoint(websocket: WebSocket, id: str):
     player_num = await manager.connect(id, websocket)
 
     if (player_num==1):
-        future = asyncio.Future()
-        async with manager.lock:
-            manager.rooms[id]["confirm"] = future
         try:
             val = await manager.rooms[id]["confirm"]
             if not val:
@@ -180,14 +182,15 @@ async def ws_endpoint(websocket: WebSocket, id: str):
                     "message": "join error"
                 }
                 await websocket.send_json(ret)
-                await websocket.close()
+                return
         except WebSocketDisconnect:
             manager.disconnect(id, 1)
             return
 
     elif (player_num==2):
         async with manager.lock:
-            manager.rooms[id]["confirm"].set_result(True)
+            if not manager.rooms[id]["confirm"].done():
+                manager.rooms[id]["confirm"].set_result(True)
 
     else:
         message = {
@@ -242,9 +245,9 @@ async def ws_endpoint(websocket: WebSocket, id: str):
         if id in manager.rooms and not games[id].game_over:
             games[id].winner = 3-player_num
             games[id].game_over = True
-        message = {
-            "type": "disconnection",
-            "message": f"player{player_num} left the game",
-            **games[id].serialize()
-            }
-        await manager.broadcast(id, message)
+            message = {
+                "type": "disconnection",
+                "message": f"player{player_num} left the game",
+                **games[id].serialize()
+                }
+            await manager.broadcast(id, message)

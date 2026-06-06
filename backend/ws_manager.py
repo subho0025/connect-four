@@ -12,10 +12,11 @@ class ConnectionManager:
         await websocket.accept()
 
         if id not in self.rooms:
+            future = asyncio.Future()
             self.rooms[id]= {
                 "player1": websocket,
                 "player2": None,
-                "confirm": False
+                "confirm": future
             }
             return 1
         
@@ -31,8 +32,8 @@ class ConnectionManager:
         if id in self.rooms:
             self.rooms[id][f"player{player_num}"]=None
         
-        if (self.rooms[id]["player1"] is None and self.rooms[id]["player2"] is None):
-            del self.rooms[id]
+            if (self.rooms[id]["player1"] is None and self.rooms[id]["player2"] is None):
+                del self.rooms[id]
     
     async def broadcast(self, id: str, message: dict):
 
