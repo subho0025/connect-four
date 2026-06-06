@@ -3,8 +3,19 @@ from pydantic import BaseModel
 import secrets
 from ConnectFour import Game
 from ws_manager import ConnectionManager
+from collections import deque
+import asyncio
+from fastapi.middleware.cors import CORSMiddleware
 
 app= FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 manager = ConnectionManager()
 
@@ -44,7 +55,7 @@ def move(id:str, column: int):
         raise HTTPException(status_code=404, detail="Invalid game")
     
     if not games[id].apply_move(column):
-        raise HTTPException(status_code=400, detail= "Game finished")
+        raise HTTPException(status_code=400, detail= "Invalid move")
     
     return games[id].serialize()
 
@@ -63,12 +74,12 @@ def ai_move(id: str):
     
     return games[id].serialize()
     
-@app.post("/game/{id}/game-over")
-def game_over(id: str):
-    if id not in games:
-        raise HTTPException(status_code=404, detail="Invalid game")
+# @app.post("/game/{id}/game-over")
+# def game_over(id: str):
+#     if id not in games:
+#         raise HTTPException(status_code=404, detail="Invalid game")
     
-    return games[id].serialize()
+#     return games[id].serialize()
 
 @app.delete("/game/{id}/delete")
 def delete_game(id: str):
@@ -91,12 +102,94 @@ def restart_game(id: str):
     games[id].restart()
     return games[id].serialize()
 
+@app.websocket("/ws/find-match")
+async def find_match(websocket: WebSocket):
+
+    await websocket.accept()
+
+    future = asyncio.Future()
+
+    wait = False
+
+    async with manager.lock:
+        if not manager.waiting:
+            manager.waiting.append({
+                "websocket": websocket,
+                "future": future
+            })
+
+            wait = True
+
+        else:
+            player1 = manager.waiting.popleft()
+            id = secrets.token_urlsafe(8)
+            games[id] = Game("human", "human", id)
+
+            player1["future"].set_result({
+                "id": id,
+                "player": 1,
+                "state": games[id].serialize()
+            })
+
+            message={
+                "type": "match found",
+                "id": id,
+                "player": 2,
+                "state": games[id].serialize()
+            }
+            await websocket.send_json(message)
+
+    if wait:
+        try:
+            info = await future
+            message = {
+                "type": "match found",
+                **info
+            }
+            await websocket.send_json(message)
+        except WebSocketDisconnect:
+            async with manager.lock:
+                manager.waiting = deque(i for i in manager.waiting if i["websocket"]!=websocket)
+
+    return
+
 @app.websocket("/ws/{id}")
 async def ws_endpoint(websocket: WebSocket, id: str):
 
+    if id not in games:
+        await websocket.accept()
+        message = {
+            "type": "error",
+            "message": "invalid game id"
+        }
+        await websocket.send_json(message)
+        await websocket.close()
+        return
+
     player_num = await manager.connect(id, websocket)
 
-    if player_num is None:
+    if (player_num==1):
+        future = asyncio.Future()
+        async with manager.lock:
+            manager.rooms[id]["confirm"] = future
+        try:
+            val = await manager.rooms[id]["confirm"]
+            if not val:
+                ret = {
+                    "type": "error",
+                    "message": "join error"
+                }
+                await websocket.send_json(ret)
+                await websocket.close()
+        except WebSocketDisconnect:
+            manager.disconnect(id, 1)
+            return
+
+    elif (player_num==2):
+        async with manager.lock:
+            manager.rooms[id]["confirm"].set_result(True)
+
+    else:
         message = {
             "type": "error",
             "message": "room full"
@@ -146,8 +239,12 @@ async def ws_endpoint(websocket: WebSocket, id: str):
     
     except WebSocketDisconnect:
         manager.disconnect(id, player_num)
-        message={
-            "type":"disconnection",
-            "message": f"player{player_num} left the game"
-        }
+        if id in manager.rooms and not games[id].game_over:
+            games[id].winner = 3-player_num
+            games[id].game_over = True
+        message = {
+            "type": "disconnection",
+            "message": f"player{player_num} left the game",
+            **games[id].serialize()
+            }
         await manager.broadcast(id, message)
