@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect Four</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>Connect Four</h1>
+
+    <div id="screen-menu" class="screen active">
+        <h2>Select Game Mode</h2>
+        <div class="menu-controls">
+            <button onclick="startLocalGame('ai', 'ai')">AI vs AI</button>
+            <button onclick="startLocalGame('human', 'ai')">Human vs AI</button>
+            <button onclick="findPublicMatch()">Find Public Match</button>
+        </div>
+        
+        <div class="menu-controls" style="margin-top: 20px;">
+            <button onclick="createPrivateMatch()">Create Private Room</button>
+            <div style="margin-top: 10px;">
+                <input type="text" id="room-id-input" placeholder="Enter Room ID">
+                <button onclick="joinPrivateRoom()">Join Room</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-loading" class="screen">
+        <h2 id="loading-text">Loading...</h2>
+        <button onclick="goMenu()">Cancel / Back</button>
+    </div>
+
+    <div id="screen-game" class="screen">
+        <h2 id="status">Initializing...</h2>
+                
+        <div id="board" class="board">
+            </div>
+
+        <div class="game-controls">
+            <button id="ai-next-btn" style="display:none;" onclick="aiNextMove()">Next AI Move</button>
+            <button id="restart-btn" style="display:none;" onclick="restartGame()">Restart</button>
+            <button onclick="goMenu()">Quit to Menu</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

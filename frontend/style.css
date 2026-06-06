@@ -1,0 +1,79 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #f4f4f9;
+    color: #333;
+    margin: 0;
+    padding: 20px;
+}
+
+.screen {
+    display: none;
+    max-width: 600px;
+    margin: 0 auto;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.screen.active {
+    display: block;
+}
+
+button {
+    padding: 10px 15px;
+    font-size: 16px;
+    margin: 5px;
+    cursor: pointer;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    transition: background 0.2s;
+}
+
+button:hover {
+    background-color: #e9e9e9;
+}
+
+input {
+    padding: 10px;
+    font-size: 16px;
+    margin: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+/* Board Styling */
+.board {
+    display: grid;
+    grid-template-columns: repeat(7, 60px);
+    gap: 10px;
+    background-color: #0050b3;
+    padding: 10px;
+    border-radius: 10px;
+    width: max-content;
+    margin: 20px auto;
+}
+
+.cell {
+    width: 60px;
+    height: 60px;
+    background-color: #fff;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: inset 0 3px 5px rgba(0,0,0,0.2);
+}
+
+.cell:hover {
+    background-color: #f0f0f0;
+}
+
+/* Player Pieces (Matching Backend: Yellow=1, Red=2) */
+.cell.p1 {
+    background-color: #ffd700; 
+}
+
+.cell.p2 {
+    background-color: #ff4500;
+}
