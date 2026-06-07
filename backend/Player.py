@@ -137,7 +137,6 @@ class AIPlayer:
 
         valid_cols = self.get_valid_moves(board)
 
-        best_val = -math.inf
         best_col = valid_cols[0]
         temp = board.copy()
 
@@ -146,6 +145,9 @@ class AIPlayer:
 
         try:
             while(time.time()-self.startTime<self.maxTime):
+                curr_best_val = -math.inf
+                curr_best_col = valid_cols[0]
+
                 for col in valid_cols:
                     row = self.get_valid_row(board, col)
                     temp[row, col]=self.player_number
@@ -157,10 +159,11 @@ class AIPlayer:
                     val = self.min_value(temp, -math.inf, math.inf, depth-1)
                     temp[row,col]=0
 
-                    if(val>best_val):
-                        best_val = val
-                        best_col = col
-                    
+                    if(val>curr_best_val):
+                        curr_best_val = val
+                        curr_best_col = col
+
+                best_col = curr_best_col  
                 depth+=1
             
         except TimeoutError:
@@ -245,7 +248,6 @@ class AIPlayer:
 
         valid_cols = self.get_valid_moves(board)
 
-        best_val = -math.inf
         best_col = valid_cols[0]
         temp = board.copy()
 
@@ -254,6 +256,9 @@ class AIPlayer:
 
         try:
             while(time.time()-self.startTime<self.maxTime):
+
+                curr_best_val = -math.inf
+                curr_best_col = valid_cols[0]
 
                 for col in valid_cols:
                     row = self.get_valid_row(temp, col)
@@ -265,10 +270,11 @@ class AIPlayer:
                     val = self.exp_chance_value(temp, depth-1)
                     temp[row, col]=0
 
-                    if(val>best_val):
-                        best_val = val
-                        best_col = col
+                    if(val>curr_best_val):
+                        curr_best_val = val
+                        curr_best_col = col
                 
+                best_col = curr_best_col
                 depth+=1
         except TimeoutError:
             pass
@@ -405,43 +411,6 @@ class RandomPlayer:
             if 0 in board[:,col]:
                 valid_cols.append(col)
 
-        return np.random.choice(valid_cols)
+        return int(np.random.choice(valid_cols))
 
-
-class HumanPlayer:
-    def __init__(self, player_number):
-        self.player_number = player_number
-        self.type = 'human'
-        self.player_string = 'Player {}:human'.format(player_number)
-
-    def get_move(self, board):
-        """
-        Given the current board state returns the human input for next move
-
-        INPUTS:
-        board - a numpy array containing the state of the board using the
-                following encoding:
-                - the board maintains its same two dimensions
-                    - row 0 is the top of the board and so is
-                      the last row filled
-                - spaces that are unoccupied are marked as 0
-                - spaces that are occupied by player 1 have a 1 in them
-                - spaces that are occupied by player 2 have a 2 in them
-
-        RETURNS:
-        The 0 based index of the column that represents the next move
-        """
-
-        valid_cols = []
-        for i, col in enumerate(board.T):
-            if 0 in col:
-                valid_cols.append(i)
-
-        move = int(input('Enter your move: '))
-
-        while move not in valid_cols:
-            print('Column full, choose from:{}'.format(valid_cols))
-            move = int(input('Enter your move: '))
-
-        return move
 
