@@ -15,10 +15,11 @@
         <div class="menu-controls">
             <button onclick="startLocalGame('ai', 'ai')">AI vs AI</button>
             <button onclick="startLocalGame('human', 'ai')">Human vs AI</button>
-            <button onclick="findPublicMatch()">Find Public Match</button>
+            <button onclick="startLocalGame('random', 'ai')">Random vs AI</button>
         </div>
         
         <div class="menu-controls" style="margin-top: 20px;">
+            <button onclick="findPublicMatch()">Find Public Match</button>
             <button onclick="createPrivateMatch()">Create Private Room</button>
             <div style="margin-top: 10px;">
                 <input type="text" id="room-id-input" placeholder="Enter Room ID">
@@ -40,6 +41,7 @@
 
         <div class="game-controls">
             <button id="ai-next-btn" style="display:none;" onclick="aiNextMove()">Next AI Move</button>
+            <button id="random-btn" style="display:none;" onclick="randomMove()">Random Move</button>
             <button id="restart-btn" style="display:none;" onclick="restartGame()">Restart</button>
             <button onclick="goMenu()">Quit to Menu</button>
         </div>

@@ -54,9 +54,12 @@ def move(id:str, column: int):
     if id not in games:
         raise HTTPException(status_code=404, detail="Invalid game")
     
-    if games[id].current_turn in games[id].ai_players:
+    if games[id].current_turn in games[id].ai_players :
         raise HTTPException(status_code=400, detail="Press Next AI Move")
     
+    if games[id].current_turn in games[id].random_players:
+        raise HTTPException(status_code=400, detail= "Press Random Move")
+
     if not games[id].apply_move(column):
         raise HTTPException(status_code=400, detail= "Invalid move")
     
@@ -71,18 +74,31 @@ def ai_move(id: str):
         raise HTTPException(status_code=400, detail="Current Player is not AI")
     
     curr = games[id].ai_players[games[id].current_turn]
-    move = curr.get_alpha_beta_move(games[id].board)
+
+    if (3-curr.player_number) in games[id].random_players:
+        move = curr.get_expectimax_move(games[id].board)
+    else:
+        move = curr.get_alpha_beta_move(games[id].board)
+
     if not games[id].apply_move(move):
           raise HTTPException(status_code=400, detail="Game finished")
     
     return games[id].serialize()
+
+@app.post("/game/{id}/random-move")
+def random_move(id: str):
+    if id not in games:
+        raise HTTPException(status_code=404, detail="Invalid game")
     
-# @app.post("/game/{id}/game-over")
-# def game_over(id: str):
-#     if id not in games:
-#         raise HTTPException(status_code=404, detail="Invalid game")
+    if games[id].current_turn not in games[id].random_players:
+        raise HTTPException(status_code=400, detail="Current Player is not Random")
     
-#     return games[id].serialize()
+    curr = games[id].random_players[games[id].current_turn]
+    move = curr.get_move(games[id].board)
+    if not games[id].apply_move(move):
+        raise HTTPException(status_code=400, detail="Game finished")
+    
+    return games[id].serialize()
 
 @app.delete("/game/{id}/delete")
 def delete_game(id: str):

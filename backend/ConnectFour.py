@@ -1,5 +1,5 @@
 import numpy as np
-from Player import AIPlayer, RandomPlayer, HumanPlayer
+from Player import AIPlayer, RandomPlayer
 
 
 class Game:
@@ -14,11 +14,17 @@ class Game:
         self.winner = None
 
         self.ai_players={}
+        self.random_players={}
 
         if(self.player1=="ai"):
             self.ai_players[1]= AIPlayer(1,1.5)
         if(self.player2=="ai"):
             self.ai_players[2]= AIPlayer(2,1.5)
+
+        if(self.player1=="random"):
+            self.random_players[1]=RandomPlayer(1)
+        if(self.player2=="random"):
+            self.random_players[2]=RandomPlayer(2)
 
     def serialize(self):
         return {

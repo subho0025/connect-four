@@ -45,7 +45,7 @@ function goMenu() {
 }
 
 async function startLocalGame(p1, p2) {
-    client.mode = p1 === "ai" ? "ai_vs_ai" : "human_vs_ai";
+    client.mode = p1 === "ai" ? "ai_vs_ai" : (p1 === "human" ? "human_vs_ai" : "random_vs_ai");
     client.pNum = 1; 
     
     const data = await api("", "POST", { player1: p1, player2: p2 });
@@ -58,7 +58,7 @@ async function makeMove(col) {
     try {
         if (client.ws) {
             client.ws.send(JSON.stringify({ type: "move", col }));
-        } else if (client.mode === "human_vs_ai") {
+        } else {
             updateBoard(await api(`/${client.id}/move/${col}`, "POST"));
         }
     } catch(e) {}
@@ -66,6 +66,10 @@ async function makeMove(col) {
 
 async function aiNextMove() {
     try { updateBoard(await api(`/${client.id}/ai-move`, "POST")); } catch(e) {}
+}
+
+async function randomMove() {
+    try { updateBoard(await api(`/${client.id}/random-move`, "POST"));} catch(e) {}
 }
 
 async function restartGame() {
@@ -145,9 +149,11 @@ function updateBoard(s) {
 
     const status = $("status");
     const aiBtn = $("ai-next-btn");
+    const randomBtn = $("random-btn")
     const restartBtn = $("restart-btn");
     
     aiBtn.style.display = "none";
+    randomBtn.style.display= "none";
     restartBtn.style.display = client.mode !== "multiplayer" ? "inline-block" : "none";
 
     if (s.game_over) {
@@ -155,6 +161,12 @@ function updateBoard(s) {
             status.innerText = "It's a Draw!";
         } else if (client.mode === "ai_vs_ai") {
             status.innerText = `AI ${s.winner} Wins!`;
+        } else if (client.mode === "random_vs_ai"){
+            if (s.winner===1){
+                status.innerText = "Random Player Wins";
+            }else{
+                status.innerText = "AI Wins"
+            }
         } else {
             status.innerText = s.winner === client.pNum ? "You Win!" : "You Lost!";
         }
@@ -164,6 +176,10 @@ function updateBoard(s) {
         } else if (client.mode === "ai_vs_ai") {
             status.innerText = `AI ${s.current_turn} is thinking...`;
             aiBtn.style.display = "inline-block";
+        } else if (client.mode === "random_vs_ai") {
+            status.innerText = s.current_turn===1 ? "Random Player Turn" : "AI is thinking...";
+            if (s.current_turn === 1) randomBtn.style.display = "inline-block";
+            else aiBtn.style.display = "inline-block";
         } else if (client.mode === "human_vs_ai") {
             status.innerText = s.current_turn === 1 ? "Your Turn (Click a column)" : "AI is thinking...";
             if (s.current_turn === 2) aiBtn.style.display = "inline-block";
