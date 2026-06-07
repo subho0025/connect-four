@@ -16,9 +16,9 @@ class Game:
         self.ai_players={}
 
         if(self.player1=="ai"):
-            self.ai_players[1]= AIPlayer(1)
+            self.ai_players[1]= AIPlayer(1,1.5)
         if(self.player2=="ai"):
-            self.ai_players[2]= AIPlayer(2)
+            self.ai_players[2]= AIPlayer(2,1.5)
 
     def serialize(self):
         return {

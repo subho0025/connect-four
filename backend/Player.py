@@ -1,11 +1,14 @@
 import numpy as np
 import math
+import time
 
 class AIPlayer:
-    def __init__(self, player_number):
+    def __init__(self, player_number, maxTime):
         self.player_number = player_number
         self.type = 'ai'
         self.player_string = 'Player {}:ai'.format(player_number)
+        self.maxTime = maxTime
+        self.startTime= 0
 
     def get_valid_moves(self, board):
         valid = []
@@ -55,6 +58,10 @@ class AIPlayer:
     
     
     def max_value(self, board, alpha, beta, depth):
+
+        if (time.time()-self.startTime>=self.maxTime):
+            raise TimeoutError
+        
         if(self.is_terminal(board) or depth==0):
             return self.evaluation_function(board)
         
@@ -79,6 +86,10 @@ class AIPlayer:
         return val
     
     def min_value(self, board, alpha, beta, depth):
+
+        if (time.time()-self.startTime>=self.maxTime):
+            raise TimeoutError
+
         if(self.is_terminal(board) or depth==0):
             return self.evaluation_function(board)
         
@@ -124,32 +135,45 @@ class AIPlayer:
         The 0 based index of the column that represents the next move
         """
 
-        depth = 5
-
         valid_cols = self.get_valid_moves(board)
 
         best_val = -math.inf
         best_col = valid_cols[0]
         temp = board.copy()
 
-        for col in valid_cols:
-            row = self.get_valid_row(board, col)
-            temp[row, col]=self.player_number
+        self.startTime = time.time()
+        depth=4
 
-            if(self.is_win(temp, self.player_number, row, col)):
-                temp[row, col]=0
-                return col
+        try:
+            while(time.time()-self.startTime<self.maxTime):
+                for col in valid_cols:
+                    row = self.get_valid_row(board, col)
+                    temp[row, col]=self.player_number
+
+                    if(self.is_win(temp, self.player_number, row, col)):
+                        temp[row, col]=0
+                        return col
+                    
+                    val = self.min_value(temp, -math.inf, math.inf, depth-1)
+                    temp[row,col]=0
+
+                    if(val>best_val):
+                        best_val = val
+                        best_col = col
+                    
+                depth+=1
             
-            val = self.min_value(temp, -math.inf, math.inf, depth-1)
-            temp[row,col]=0
-
-            if(val>best_val):
-                best_val = val
-                best_col = col
+        except TimeoutError:
+            pass
         
+        print(time.time()-self.startTime)
+        print(depth)
         return best_col
     
     def exp_max_value(self, board, depth):
+
+        if (time.time()-self.startTime>=self.maxTime):
+            raise TimeoutError
 
         if(self.is_terminal(board) or depth==0):
             return self.evaluation_function(board)
@@ -170,6 +194,9 @@ class AIPlayer:
         return val
     
     def exp_chance_value(self, board, depth):
+
+        if (time.time()-self.startTime>=self.maxTime):
+            raise TimeoutError
 
         if(self.is_terminal(board) or depth==0):
             return self.evaluation_function(board)
@@ -215,8 +242,6 @@ class AIPlayer:
         RETURNS:
         The 0 based index of the column that represents the next move
         """
-        
-        depth = 4
 
         valid_cols = self.get_valid_moves(board)
 
@@ -224,19 +249,29 @@ class AIPlayer:
         best_col = valid_cols[0]
         temp = board.copy()
 
-        for col in valid_cols:
-            row = self.get_valid_row(temp, col)
-            temp[row, col] =self.player_number
+        self.startTime=time.time()
+        depth=3
 
-            if(self.is_win(temp, self.player_number, row, col)):
-                temp[row, col]=0
-                return col
-            val = self.exp_chance_value(temp, depth-1)
-            temp[row, col]=0
+        try:
+            while(time.time()-self.startTime<self.maxTime):
 
-            if(val>best_val):
-                best_val = val
-                best_col = col
+                for col in valid_cols:
+                    row = self.get_valid_row(temp, col)
+                    temp[row, col] =self.player_number
+
+                    if(self.is_win(temp, self.player_number, row, col)):
+                        temp[row, col]=0
+                        return col
+                    val = self.exp_chance_value(temp, depth-1)
+                    temp[row, col]=0
+
+                    if(val>best_val):
+                        best_val = val
+                        best_col = col
+                
+                depth+=1
+        except TimeoutError:
+            pass
         
         return best_col
 
