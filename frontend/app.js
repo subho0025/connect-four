@@ -1,5 +1,5 @@
-const API = "http://localhost:8000/game";
-const WS = "ws://localhost:8000/ws";
+const API = "https://connect-four-backend-ud48.onrender.com/game";
+const WS = "wss://connect-four-backend-ud48.onrender.com/ws";
 
 let client = { id: null, mode: null, pNum: 1, ws: null };
 
