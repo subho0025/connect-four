@@ -127,3 +127,25 @@ input:focus { border-color: #007bff; }
     from { opacity: 0; transform: scale(0.95); }
     to { opacity: 1; transform: scale(1); }
 }
+
+/* Shrink the sizes for screen smaller than 550px */
+@media (max-width: 550px) {
+    body {
+        padding: 10px;
+    }
+    .screen {
+        padding: 15px;
+    }
+    .board {
+        grid-template-columns: repeat(7, 40px);
+        gap: 5px;
+        padding: 10px;
+    }
+    .cell {
+        width: 40px;
+        height: 40px;
+    }
+    h1 {
+        font-size: 2rem;
+    }
+}

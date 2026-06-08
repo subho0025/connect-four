@@ -203,3 +203,9 @@ function updateBoard(s) {
         }
     }
 }
+
+window.addEventListener("beforeunload", () => {
+    if (client.id && !client.ws) {
+        navigator.sendBeacon(`${API}/${client.id}/delete`);
+    }
+});
