@@ -1,6 +1,6 @@
 import numpy as np
 from Player import AIPlayer, RandomPlayer
-
+import random
 
 class Game:
     def __init__(self, player1, player2, id):
@@ -17,9 +17,9 @@ class Game:
         self.random_players={}
 
         if(self.player1=="ai"):
-            self.ai_players[1]= AIPlayer(1,1.5)
+            self.ai_players[1]= AIPlayer(1,random.uniform(1.0,2.0))
         if(self.player2=="ai"):
-            self.ai_players[2]= AIPlayer(2,1.5)
+            self.ai_players[2]= AIPlayer(2,random.uniform(1.0,2.0))
 
         if(self.player1=="random"):
             self.random_players[1]=RandomPlayer(1)

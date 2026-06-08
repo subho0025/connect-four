@@ -169,8 +169,6 @@ class AIPlayer:
         except TimeoutError:
             pass
         
-        print(time.time()-self.startTime)
-        print(depth)
         return best_col
     
     def exp_max_value(self, board, depth):
