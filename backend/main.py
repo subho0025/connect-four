@@ -222,7 +222,11 @@ async def ws_endpoint(websocket: WebSocket, id: str):
         "player": player_num,
         "state": games[id].serialize()
     }
-    await websocket.send_json(message)
+    try: 
+        await websocket.send_json(message)
+    except (WebSocketDisconnect, RuntimeError):
+        await clean_disconnect(id, player_num)
+        return
 
     try:
         while True:
@@ -257,13 +261,22 @@ async def ws_endpoint(websocket: WebSocket, id: str):
                 await manager.broadcast(id, message)
     
     except WebSocketDisconnect:
-        manager.disconnect(id, player_num)
-        if id in manager.rooms and not games[id].game_over:
-            games[id].winner = 3-player_num
-            games[id].game_over = True
+        await clean_disconnect(id, player_num)
+
+
+async def clean_disconnect(id: str, player_num: int):
+    manager.disconnect(id, player_num)
+    if id in games:
+        if id in manager.rooms:
+            if not games[id].game_over:
+                games[id].winner = 3-player_num
+                games[id].game_over = True
             message = {
                 "type": "disconnection",
                 "message": f"player{player_num} left the game",
                 **games[id].serialize()
                 }
             await manager.broadcast(id, message)
+
+        else:
+            del games[id]
