@@ -1,79 +1,129 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap');
+
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Nunito', sans-serif;
     text-align: center;
-    background-color: #f4f4f9;
-    color: #333;
+    background: radial-gradient(circle at top, #2b3252, #111522);
+    color: #fff;
     margin: 0;
     padding: 20px;
+    min-height: 100vh;
 }
+
+h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 3rem;
+    text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    margin-bottom: 15px;
+    color: #ffd700;
+}
+
+h2 { margin-top: 0; color: #333; }
+#status { color: #1e62d0; }
 
 .screen {
     display: none;
     max-width: 600px;
     margin: 0 auto;
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    background: rgba(255, 255, 255, 0.95);
+    color: #333;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 
 .screen.active {
     display: block;
+    animation: fadeIn 0.3s ease-out;
 }
 
+
+
+/* 3D Buttons */
 button {
-    padding: 10px 15px;
+    padding: 12px 20px;
     font-size: 16px;
-    margin: 5px;
+    font-weight: bold;
+    margin: 8px;
     cursor: pointer;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    background-color: #fff;
-    transition: background 0.2s;
+    border-radius: 25px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    box-shadow: 0 5px 0 #0056b3, 0 6px 10px rgba(0,0,0,0.2); 
+    transition: all 0.1s ease;
 }
 
 button:hover {
-    background-color: #e9e9e9;
+    background-color: #0069d9;
+    transform: translateY(2px);
+    box-shadow: 0 3px 0 #0056b3, 0 4px 8px rgba(0,0,0,0.2);
+}
+
+button:active {
+    transform: translateY(5px);
+    box-shadow: none;
 }
 
 input {
-    padding: 10px;
+    padding: 12px;
     font-size: 16px;
     margin: 5px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
+    border-radius: 8px;
+    border: 2px solid #ccc;
+    outline: none;
+    transition: border-color 0.2s;
 }
 
-/* Board Styling */
+input:focus { border-color: #007bff; }
+
+
+
+/* 3D Board Styling */
 .board {
     display: grid;
     grid-template-columns: repeat(7, 60px);
     gap: 10px;
-    background-color: #0050b3;
-    padding: 10px;
-    border-radius: 10px;
+    background-color: #1e62d0;
+    padding: 15px;
+    border-radius: 15px;
     width: max-content;
     margin: 20px auto;
+    box-shadow: 0 10px 0 #0f4094, 0 15px 20px rgba(0,0,0,0.4); 
 }
 
+/* Empty Holes */
 .cell {
     width: 60px;
     height: 60px;
-    background-color: #fff;
+    background-color: #0f4094;
     border-radius: 50%;
     cursor: pointer;
-    box-shadow: inset 0 3px 5px rgba(0,0,0,0.2);
+    box-shadow: inset 0 5px 10px rgba(0,0,0,0.6);
+    transition: background-color 0.2s;
 }
 
-.cell:hover {
-    background-color: #f0f0f0;
+.cell:hover { background-color: #134ba8; }
+
+/* Player Pieces */
+.cell.p1, .cell.p2 {
+    cursor: default;
+    box-shadow: inset 0 -4px 5px rgba(0,0,0,0.2), 0 4px 6px rgba(0,0,0,0.4); 
+    animation: dropIn 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-/* Player Pieces (Matching Backend: Yellow=1, Red=2) */
-.cell.p1 {
-    background-color: #ffd700; 
+.cell.p1 { background: radial-gradient(circle at 30% 30%, #ffe666, #ffcc00, #b38f00); }
+.cell.p2 { background: radial-gradient(circle at 30% 30%, #ff6666, #ff1a1a, #b30000); }
+
+
+/* CSS Animations */
+@keyframes dropIn {
+    0% { transform: translateY(-400px); opacity: 0; }
+    50% { transform: translateY(15px); }
+    100% { transform: translateY(0); opacity: 1; }
 }
 
-.cell.p2 {
-    background-color: #ff4500;
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
 }
