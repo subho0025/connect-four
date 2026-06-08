@@ -79,11 +79,11 @@ async function restartGame() {
 function findPublicMatch() {
     show('loading');
     $('loading-text').innerText = "Finding match...";
-    const ws = new WebSocket(`${WS}/find-match`);
-    ws.onmessage = message => {
+    client.ws = new WebSocket(`${WS}/find-match`);
+    client.ws.onmessage = message => {
         const data = JSON.parse(message.data);
         if (data.type === "match found") {
-            ws.close();
+            client.ws.close();
             connectWS(data.id); }
     };
 }
@@ -136,14 +136,31 @@ function connectWS(id) {
 
 function updateBoard(s) {
     const board = $("board");
-    board.innerHTML = "";
+    
+    if (board.children.length === 0) {
+        for (let r = 0; r < 6; r++) {
+            for (let c = 0; c < 7; c++) {
+                const cell = document.createElement("div");
+                cell.className = "cell";
+                cell.id = `cell-${r}-${c}`;
+                board.appendChild(cell);
+            }
+        }
+    }
     
     s.board.forEach((row, r) => {
         row.forEach((val, c) => {
-            const cell = document.createElement("div");
-            cell.className = `cell ${val === 1 ? 'p1' : (val === 2 ? 'p2' : '')}`;
-            if (!s.game_over) cell.onclick = () => makeMove(c);
-            board.appendChild(cell);
+            const cell = $(`cell-${r}-${c}`);
+            
+            if (val === 1 && !cell.classList.contains('p1')) {
+                cell.classList.add('p1');
+            } else if (val === 2 && !cell.classList.contains('p2')) {
+                cell.classList.add('p2');
+            } else if (val === 0) {
+                cell.className = 'cell'; 
+            }
+
+            cell.onclick = !s.game_over ? () => makeMove(c) : null;
         });
     });
 
