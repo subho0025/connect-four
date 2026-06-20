@@ -22,7 +22,7 @@ app.add_middleware(
 
 manager = ConnectionManager()
 
-@app.get("/")
+@app.api_route("/", methods = ["GET", "HEAD"])
 def get_root():
     return {"message": "backend working"}
 
