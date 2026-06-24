@@ -2,15 +2,7 @@
 
 ### Live Demo
 
-[phanton-connect4.vercel.app](https://phantom-connect4.vercel.app)
-
-> **Deployment & Cold Start Note:**
-
-> The backend API and WebSocket server are hosted on Render's free tier.
-
-> Because free instances spin down after 15 minutes of inactivity, the very first time you load the game, it may take 30–60 seconds for the backend server to wake up.
-
-> If the game appears unresponsive on the first load, please wait briefly and refresh. Subsequent requests should be significantly faster.
+[phantom-connect4.vercel.app](https://phantom-connect4.vercel.app)
 
 ## Overview
 A full-stack, real-time multiplayer Connect Four web application engineered with a focus on high-performance backend architecture, concurrent state management, and algorithmic artificial intelligence. 
